@@ -6,19 +6,22 @@ from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
 import argparse
 
-# refactor (perhaps parse files in a diff file to speed things up)
-# returns an array of midi data given composer
-def parseFiles(composer):
-    path = "data/" + composer + '/'
-    paths = os.listdir(path)
-    midi_data = []
-    for p in paths:
-        file = path + p
-        try:
-            midi_data.append(pretty_midi.PrettyMIDI(file))
-        except:
-            print("Error with " + file)
-    return midi_data
+def readData():
+    data = open('data_split.txt', 'r')
+    train_data = eval(data.readline())
+    dev_data = eval(data.readline())
+    test_data = eval(data.readline())
+    return train_data, dev_data, test_data
+
+def parseFiles(data):
+    x, y = [], []
+    for d in data:
+        path = os.path.split(d)
+        y.append(path[0])
+        path = "data/" + d
+        x.append(pretty_midi.PrettyMIDI(path))
+
+    return x, np.array(y)
 
 def extract(midi_list):
     features = []
@@ -44,6 +47,7 @@ def svm(x_train, x_test, y_train, y_test):
     # return score
 
 def main():
+    DEV = False
     parser = argparse.ArgumentParser()
     parser.add_argument("-dev", action="store_true")
     args = parser.parse_args()
@@ -51,26 +55,23 @@ def main():
         print("IN DEV MODE")
         DEV = True
 
+    train_data, dev_data, test_data = readData()
+    x_train, y_train = parseFiles(train_data)
+    x_dev, y_dev = parseFiles(dev_data)
+    x_test, y_test = parseFiles(test_data)
+    print('Finished parsing')
+
+    x_train = np.array(extract(x_train))
+    x_dev = np.array(extract(x_dev))
+    x_test = np.array(extract(x_test))
     composers = os.listdir("data")
-    # composers = ["bach", "beethoven"]
-    x_data, y = [], []
 
-    for c in composers:
-        midi_data = parseFiles(c)
-        length = len(midi_data)
-        y.extend([c] * length)
-        x_data.extend(extract(midi_data))
-    y_data = np.array(y)
-    x_data = np.array(x_data)
-
-    # split 90/10 for train+dev/test
-    x_train, x_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.1, shuffle=True)
-    # split again for the 70/20 train/dev
-    x_train, x_dev, y_train, y_dev = train_test_split(x_train, y_train, test_size=0.22, shuffle=True)
-    if DEV == True:
+    if DEV:
+        print('dev')
         x_test = x_dev
         y_test = y_dev
 
+    print("In the order of linear, rbf, poly, sigmoid")
     for c in composers:
         print("=== COMPOSER: " + c + " ===")
         y_train_c = classify(c, y_train)

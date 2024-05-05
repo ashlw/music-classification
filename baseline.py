@@ -6,7 +6,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 import argparse
 
-DEV = False
 
 def readData():
     data = open('data_split.txt', 'r')
@@ -47,6 +46,7 @@ def log_reg(x_train, x_test, y_train, y_test):
     return score
 
 def main():
+    DEV = False
     parser = argparse.ArgumentParser()
     parser.add_argument("-dev", action="store_true")
     args = parser.parse_args()
