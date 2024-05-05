@@ -20,7 +20,6 @@ def parseFiles(composer):
             print("Error with " + file)
     return midi_data
 
-# take the mean of pitch frequencies that is weighted by note duration
 def extract(midi_list):
     features = []
     for midi in midi_list:
@@ -36,7 +35,7 @@ def classify(composer, arr):
     return arr
 
 def svm(x_train, x_test, y_train, y_test):
-    for kernel in ("linear", "rbf", "poly"):
+    for kernel in ("linear", "rbf", "poly", "sigmoid"):
         svm = SVC(kernel=kernel, gamma=10)
         svm.fit(x_train, y_train)
         y_pred = svm.predict(x_test)
