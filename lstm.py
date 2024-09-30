@@ -6,6 +6,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+#ref: # https://github.com/ruohoruotsi/LSTM-Music-Genre-Classification/blob/master/lstm_genre_classifier_pytorch.py
+
 def readData():
     data = open('data_split.txt', 'r')
     train_data = eval(data.readline())
@@ -13,7 +15,7 @@ def readData():
     test_data = eval(data.readline())
     return train_data, dev_data, test_data
 
-# returns list of midi files and their corresponding composer labels
+# returns list of midi files(x) and their corresponding composer labels(y)
 def parseFiles(data):
     x, y = [], []
     for d in data:
@@ -46,7 +48,6 @@ def midi_to_notes(midi_file: str) -> pd.DataFrame:
 
   return pd.DataFrame({name: np.array(value) for name, value in notes.items()})
 
-# https://github.com/ruohoruotsi/LSTM-Music-Genre-Classification/blob/master/lstm_genre_classifier_pytorch.py
 class LSTM(nn.Module):
     # input dim -> number of features
     # output dim -> number of classes
@@ -81,8 +82,22 @@ def main():
     x_dev, y_dev = parseFiles(dev_data)
     # x_test, y_test = parseFiles(test_data)
 
-    # parse midi into notes ( # of files, notes )
-    # use composers as labels (1, # of files)
+    # TODO: extract features
+
+    # convert to tensors
+    x_train = torch.from_numpy(x_train).type(torch.Tensor)
+    x_dev = torch.from_numpy(x_dev).type(torch.Tensor)
+    # x_test = torch.from_numpy(x_test).type(torch.Tensor)
+
+    # Targets is a long tensor of size (N,) which tells the true class of the sample.
+    y_train = torch.from_numpy(y_train).type(torch.LongTensor)
+    y_dev = torch.from_numpy(y_dev).type(torch.LongTensor)
+    # y_test = torch.from_numpy(y_test).type(torch.LongTensor)
+
+    batch_size = 35  # num of training examples per minibatch
+    num_epochs = 100
+
+    # initialize model
 
 if __name__ == '__main__':
     main()
