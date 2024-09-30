@@ -2,6 +2,9 @@ import pretty_midi
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 
 def readData():
     data = open('data_split.txt', 'r')
@@ -42,6 +45,35 @@ def midi_to_notes(midi_file: str) -> pd.DataFrame:
     prev_start = start
 
   return pd.DataFrame({name: np.array(value) for name, value in notes.items()})
+
+# https://github.com/ruohoruotsi/LSTM-Music-Genre-Classification/blob/master/lstm_genre_classifier_pytorch.py
+class LSTM(nn.Module):
+    # input dim -> number of features
+    # output dim -> number of classes
+    # hidden dim -> number of nodes in unit, equiv to CNN neurons
+    def __init__(self, input_dim, hidden_dim, batch_size, output_dim=4, num_layers=2):
+        super(LSTM, self).__init__()
+        self.input_dim = input_dim
+        self.hidden_dim = hidden_dim
+        self.batch_size = batch_size
+        self.num_layers = num_layers
+        # setup LSTM layer
+        self.lstm = nn.LSTM(self.input_dim, self.hidden_dim, self.num_layers)
+        # setup output layer
+        self.linear = nn.Linear(self.hidden_dim, output_dim)
+
+    def forward(self, input, hidden=None):
+        lstm_out, hidden = self.lstm(input, hidden)
+        logits = self.linear(lstm_out[-1])
+        scores = F.log_softmax(logits, dim=1)
+        return scores, hidden
+
+    def get_accuracy(self, logits, target):
+        corrects = (
+                torch.max(logits, 1)[1].view(target.size()).data == target.data
+        ).sum()
+        accuracy = 100.0 * corrects / self.batch_size
+        return accuracy.item()
 
 def main():
     train_data, dev_data, test_data = readData()
