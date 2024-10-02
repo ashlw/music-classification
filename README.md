@@ -10,3 +10,5 @@ To test svm, `python svm.py`
 For dev mode, `-dev` flag is available for both.
 
 To resplit data, run `python data_split.py`.
+
+update: lstm is added and needs refactoring. test with batch size, sequence lengths, and features.
